@@ -169,6 +169,13 @@ kubectl create -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-
 kubectl -n kube-system wait --for=condition=ready -l name=cni-plugins pod --timeout=300s
 ```
 
+And we'll install whereabouts, an IPAM CNI plugin
+
+```
+kubectl create -f https://raw.githubusercontent.com/k8snetworkplumbingwg/whereabouts/refs/heads/master/doc/crds/daemonset-install.yaml
+kubectl -n kube-system wait --for=condition=ready -l name=whereabouts pod --timeout=300s
+```
+
 Now we can see what these commands did, our CNI configuration is modified:
 
 ```
@@ -260,6 +267,51 @@ docker exec -it kind-worker ip a
 ```
 
 ## Step 6: Choose your own adventure! Install an LLM (or use one I provide)
+
+You can install ollama yourself:
+
+https://ollama.com/download
+
+Linux shown, just with:
+
+```
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+I usually run ollama-serve in a screen...
+
+```
+screen -S ollama-serve
+OLLAMA_HOST=0.0.0.0:8080 ollama serve
+```
+
+Then Hit `CTRL+a` (let go), then `d`
+
+You can return to it with:
+
+```
+screen -r ollama-serve
+```
+
+Then a screen for run
+
+```
+screen -S ollama-run
+OLLAMA_HOST=0.0.0.0:8080 ollama run deepseek-coder-v2:16b
+# OLLAMA_HOST=0.0.0.0:8080 ollama run llama2:13b
+OLLAMA_HOST=0.0.0.0:8080 ollama run codegemma:7b
+```
+
+Then, you can run robocniconfig itself!
+
+
+```
+robocni -host 192.168.50.199 -model deepseek-coder-v2:16b -port 8080 "give me a macvlan CNI configuration mastered to eth0 using host-local ipam ranged on 192.0.2.0/24" && echo
+robocni -host 192.168.50.199 -model codegemma:7b -port 8080 "give me a macvlan CNI config with ipam on 10.0.2.0/24 " && echo
+```
+
+Add the `-debug` flag if you're having problems.
+
 
 
 
