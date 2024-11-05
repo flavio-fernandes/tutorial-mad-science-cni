@@ -22,7 +22,20 @@ I'll be using a Fedora 40 system, but, you can use anything that's capable of th
 
 Let's install: https://github.com/dougbtv/robocniconfig
 
-Let's get a golang environment going so we can build it...
+We can install it via binaries, if you're using linux amd 64 type architecure....
+
+```
+curl -L -o robocni https://github.com/dougbtv/robocniconfig/releases/download/v0.0.2/robocni
+curl -L -o looprobocni https://github.com/dougbtv/robocniconfig/releases/download/v0.0.2/looprobocni
+chmod +x robocni
+chmod +x looprobocni
+sudo mv looprobocni /usr/local/bin/
+sudo mv robocni /usr/local/bin/
+```
+
+### OPTIONAL: Build `robocniconfig` with golang
+
+Get a golang environment going so we can build it...
 
 The lastest install instructions are here: https://go.dev/doc/install
 
@@ -172,7 +185,7 @@ kubectl -n kube-system wait --for=condition=ready -l name=cni-plugins pod --time
 And we'll install whereabouts, an IPAM CNI plugin
 
 ```
-kubectl create -f https://raw.githubusercontent.com/k8snetworkplumbingwg/whereabouts/refs/heads/master/doc/crds/daemonset-install.yaml
+kubectl create -f https://raw.githubusercontent.com/k8snetworkplumbingwg/whereabouts/refs/heads/master/doc/crds/daemonset-install.yaml -f https://raw.githubusercontent.com/k8snetworkplumbingwg/whereabouts/refs/heads/master/doc/crds/whereabouts.cni.cncf.io_overlappingrangeipreservations.yaml -f https://raw.githubusercontent.com/k8snetworkplumbingwg/whereabouts/refs/heads/master/doc/crds/whereabouts.cni.cncf.io_ippools.yaml
 kubectl -n kube-system wait --for=condition=ready -l name=whereabouts pod --timeout=300s
 ```
 
@@ -313,6 +326,34 @@ robocni -host 192.168.50.199 -model codegemma:7b -port 8080 "give me a macvlan C
 Add the `-debug` flag if you're having problems.
 
 
+```
+robocni -host 192.168.50.199 -model codegemma:7b -port 8080 "name a macvlan configuration after a historical event in science" && echo
+```
+
+Now let's create a `promptfile` where we'll put a series of prompts we want to test...
+
+```
+give me a macvlan CNI configuration mastered to eth0 using whereabouts ipam ranged on 192.0.2.0/24, give it a trendy kids name
+an ipvlan configuration on eth0 with whereabouts for 10.40.0.15/27 named after a street in brooklyn
+type=macvlan master=eth0 whereabouts=10.30.0.0/24
+ipvlan for eth0, ipam is whereabouts on 192.168.50.100/28 exclude 192.168.50.101/32
+dude hook me up with a macvlan mastered to eth0 with whereabouts on a 10.10.0.0/16
+macvlan eth0 whereabouts 10.40.0.0/24
+macvlan on whereabouts named after a US president
+ipvlan on eth1 named after a random fruit
+```
+
+I put mine in `/tmp/prompts.txt`
+
+```
+looprobocni -host 192.168.50.199 -model codegemma:7b -introspect -port 8080 -promptfile /tmp/prompts.txt
+```
+
+Now we can run it for 5 runs...
+
+```
+looprobocni -host 192.168.50.199 -model codegemma:7b -introspect -port 8080 -promptfile /tmp/prompts.txt --runs 5
+```
 
 
 ## Personal notes (to be removed!)
