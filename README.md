@@ -6,6 +6,10 @@ From [this kubecon tutorial session](https://kccncna2024.sched.com/event/1i7kI?i
 
 > Ready to make Kubernetes networking a little easier and a lot more fun? Join Doug for an experiment in configuring CNI (Container Networking Interface) using generative AI. Despite being advised by data scientists to avoid automating machine configurations with generative AI, Doug went into the mad scientist's lab (err, basement) and tested how often a workflow could generate CNI configurations that would establish network connectivity between pods – and the success rate might surprise you. In this session, you'll automate CNI configurations using a large language model (LLM) and gain experience with a nifty tech stack: Ollama for running a containerized LLM, Kubernetes, CNI, and some script wizardry to create your own auto-configurator. Best yet? No prior CNI or AI/ML knowledge needed, and you'll learn along the way! Just in case, have contingency plans ready should any Skynet or Space Odyssey 2001 scenarios arise during the tutorial.
 
+## Goal
+
+Spin up a [KIND (kubernetes in Docker)](https://kind.sigs.k8s.io/) cluster that uses [CNI (container network interface)](https://github.com/containernetworking) configurations generated from an LLM, and we'll test to see if there's connectivity over that network.
+
 ## Requirements!
 
 I'll be using a Fedora 40 system, but, you can use anything that's capable of these requirements:
@@ -13,6 +17,8 @@ I'll be using a Fedora 40 system, but, you can use anything that's capable of th
 * A linux (or linux-like system) that's capable of installing KIND
 * Docker
 * Git (potentially optional)
+
+(Sorry I didn't have a mac to test this on, it might be a bit of a toss up)
 
 ## Bonus requirements
 
