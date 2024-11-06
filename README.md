@@ -11,14 +11,14 @@ From [this kubecon tutorial session](https://kccncna2024.sched.com/event/1i7kI?i
 I'll be using a Fedora 40 system, but, you can use anything that's capable of these requirements:
 
 * A linux (or linux-like system) that's capable of installing KIND
-* Git
 * Docker
+* Git (potentially optional)
 
 ## Bonus requirements
 
 * A machine with a GPU!
 
-## Step 1: Install go and build robocniconfig
+## Step 1: Install robocniconfig
 
 Let's install: https://github.com/dougbtv/robocniconfig
 
@@ -31,6 +31,7 @@ chmod +x robocni
 chmod +x looprobocni
 sudo mv looprobocni /usr/local/bin/
 sudo mv robocni /usr/local/bin/
+robocni -help
 ```
 
 ### OPTIONAL: Build `robocniconfig` with golang
@@ -127,32 +128,23 @@ And we'll install it with:
 ```
 sudo curl -Lo /bin/koko https://github.com/redhat-nfvpe/koko/releases/download/v0.83/koko_0.83_linux_amd64
 sudo chmod +x /bin/koko
+koko version
 ```
+
+(`koko version` will just exit 0, no output)
 
 ## Step 4: Configure KIND and spin up a cluster
 
-Create this yaml as `./kind-cluster-config.yml`
-
-```
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-- role: worker
-- role: worker
-networking:
-  disableDefaultCNI: true
-  podSubnet: 192.168.0.0/16
-```
+Spin up a kind cluster using this yaml...
 
 ```
 cat <<EOF | kind create cluster --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
-  - role: control-plane
-  - role: worker
-  - role: worker
+- role: control-plane
+- role: worker
+- role: worker
 EOF
 ```
 
@@ -163,6 +155,64 @@ And we can do:
 ```
 kubectl get nodes
 ```
+
+## Step 4a: *(FULLY OPTIONAL)* CNI CHALLENGE MODE.
+
+*Doug will skip this during the tutorial.*
+
+If you're brave, you could instead create a cluster and spin up flannel, an alternative CNI.
+
+It will probably decrease your success rates.
+
+```
+cat <<EOF | kind create cluster --config=-
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+networking:
+  disableDefaultCNI: true
+  podSubnet: 10.244.0.0/16
+EOF
+```
+
+First, we disabled the default CNI, so we'll need to install our own.
+
+You can see that the nodes aren't ready yet, this is a CNI thing.
+
+```
+kubectl get nodes
+```
+
+We're going to install [Flannel](https://github.com/flannel-io/flannel)
+
+It requires that we have the `br_netfiler` kernel module loaded, which we'll have to do, you can do the nodes one at a time like this:
+
+```
+docker exec -it kind-worker2 modprobe br_netfilter
+```
+
+Or, all of them at once with:
+
+```
+kubectl get nodes | grep -v "NAME" | awk '{print $1}' | xargs -I {} docker exec -i {} modprobe br_netfilter
+```
+
+So let's apply that and wait for it.
+
+```
+kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/refs/heads/master/Documentation/kube-flannel.yml
+kubectl wait --for=jsonpath='{.status.numberReady}'=$(kubectl get daemonset kube-flannel-ds -n kube-flannel -o jsonpath='{.status.desiredNumberScheduled}') daemonset/kube-flannel-ds -n kube-flannel --timeout=5m
+```
+
+And we can see the nodes are ready
+
+```
+kubectl get nodes
+```
+
 
 ## Step 5: Base CNI configuration for your nodes
 
@@ -257,7 +307,7 @@ And then we check if it has multiple interfaces:
 kubectl exec -it samplepod -- ip a
 ```
 
-## Step 6: Add an extra interface with koko!
+## Step 6: Add an extra interface with koko! (possibly optional)
 
 First inspect the interfaces in your host containers...
 
@@ -265,7 +315,7 @@ First inspect the interfaces in your host containers...
 docker exec -it kind-worker ip a
 ```
 
-Then, we'll tell koko to create a veth between these two containers, in a fashion that looks like a linux interface...
+Then, we'll tell koko to create a [veth](https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking#veth) between these two containers, in a fashion that looks like a linux interface...
 
 ```
 worker1_pid=$(docker inspect --format "{{ .State.Pid }}" kind-worker)
@@ -280,6 +330,13 @@ docker exec -it kind-worker ip a
 ```
 
 ## Step 6: Choose your own adventure! Install an LLM (or use one I provide)
+
+Choose:
+
+* Spin up your own LLM with ollama
+* Use one that Doug provides (a cloud instance)
+
+### (Step 6) You chose: Install ollama yourself
 
 You can install ollama yourself:
 
@@ -310,49 +367,73 @@ Then a screen for run
 
 ```
 screen -S ollama-run
+LLAMA_HOST=0.0.0.0:8080 ollama run codegemma:7b
+```
+
+Or run a different model, like so:
+
+```
 OLLAMA_HOST=0.0.0.0:8080 ollama run deepseek-coder-v2:16b
-# OLLAMA_HOST=0.0.0.0:8080 ollama run llama2:13b
-OLLAMA_HOST=0.0.0.0:8080 ollama run codegemma:7b
+OLLAMA_HOST=0.0.0.0:8080 ollama run llama2:13b
 ```
 
-Then, you can run robocniconfig itself!
+### (Step 6) You chose: Use Doug's cloud provided Ollama instance
+
+*Doug will give you an IP address and a port!*
+
+IP ADDRESS: (stub)
+PORT: (stub)
+
+## Step 7: Run `robocniconfig`
+
+Now, you can run robocniconfig itself!
+
+First, let's export the values for our host and port
+
+```
+export OHOST=205.196.17.90
+export OPORT=11296
+export MODEL=llama3.1:70b
+```
+
+And now we'll query it
+
+```
+robocni -host $OHOST -model $MODEL -port $OPORT "give me a macvlan CNI configuration mastered to eth0 using host-local ipam ranged on 192.0.2.0/24" && echo
+robocni -host $OHOST -model $MODEL -port $OPORT "give me a macvlan CNI config with ipam on 10.0.2.0/24 " && echo
+```
+
+Add the `-debug` flag if you're having problems. (It won't give you much, but, it might give you something)
 
 
 ```
-robocni -host 192.168.50.199 -model deepseek-coder-v2:16b -port 8080 "give me a macvlan CNI configuration mastered to eth0 using host-local ipam ranged on 192.0.2.0/24" && echo
-robocni -host 192.168.50.199 -model codegemma:7b -port 8080 "give me a macvlan CNI config with ipam on 10.0.2.0/24 " && echo
-```
-
-Add the `-debug` flag if you're having problems.
-
-
-```
-robocni -host 192.168.50.199 -model codegemma:7b -port 8080 "name a macvlan configuration after a historical event in science" && echo
+robocni -host $OHOST -model $MODEL -port $OPORT "name a macvlan configuration after a historical event in science" && echo
 ```
 
 Now let's create a `promptfile` where we'll put a series of prompts we want to test...
 
 ```
-give me a macvlan CNI configuration mastered to eth0 using whereabouts ipam ranged on 192.0.2.0/24, give it a trendy kids name
+give me a macvlan CNI configuration mastered to eth0 using whereabouts ipam ranged on 192.0.2.0/24, give it a whimsical name for children
 an ipvlan configuration on eth0 with whereabouts for 10.40.0.15/27 named after a street in brooklyn
-type=macvlan master=eth0 whereabouts=10.30.0.0/24
+type=macvlan master=eth0 whereabouts=10.30.0.0/24 name~=$(after a significant landmark)
 ipvlan for eth0, ipam is whereabouts on 192.168.50.100/28 exclude 192.168.50.101/32
 dude hook me up with a macvlan mastered to eth0 with whereabouts on a 10.10.0.0/16
-macvlan eth0 whereabouts 10.40.0.0/24
+macvlan eth0 whereabouts 10.40.0.0/24 name geographical
 macvlan on whereabouts named after a US president
 ipvlan on eth1 named after a random fruit
 ```
 
-I put mine in `/tmp/prompts.txt`
+Put these contents of this in a file, I put mine in `/tmp/prompts.txt`
+
 
 ```
-looprobocni -host 192.168.50.199 -model codegemma:7b -introspect -port 8080 -promptfile /tmp/prompts.txt
+looprobocni -host $OHOST -model $MODEL -introspect -port $OPORT -promptfile /tmp/prompts.txt
 ```
 
 Now we can run it for 5 runs...
 
 ```
-looprobocni -host 192.168.50.199 -model codegemma:7b -introspect -port 8080 -promptfile /tmp/prompts.txt --runs 5
+looprobocni -host $OHOST -model $MODEL -introspect -port $OPORT -promptfile /tmp/prompts.txt --runs 5
 ```
 
 
