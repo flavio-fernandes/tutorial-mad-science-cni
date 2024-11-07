@@ -10,6 +10,10 @@ From [this kubecon tutorial session](https://kccncna2024.sched.com/event/1i7kI?i
 
 Spin up a [KIND (kubernetes in Docker)](https://kind.sigs.k8s.io/) cluster that uses [CNI (container network interface)](https://github.com/containernetworking) configurations generated from an LLM, and we'll test to see if there's connectivity over that network.
 
+## Demo recording on asciinema
+
+[![asciicast](https://asciinema.org/a/687857.svg)](https://asciinema.org/a/687857)
+
 ## Requirements!
 
 I'll be using a Fedora 40 system, but, you can use anything that's capable of these requirements:
