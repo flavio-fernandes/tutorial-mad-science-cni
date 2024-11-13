@@ -401,8 +401,8 @@ Now, you can run robocniconfig itself!
 First, let's export the values for our host and port
 
 ```
-export OHOST=205.196.17.90
-export OPORT=11296
+export OHOST=66.114.112.70
+export OPORT=56673
 export MODEL=llama3.1:70b
 ```
 
