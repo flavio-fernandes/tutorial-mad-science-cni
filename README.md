@@ -129,7 +129,7 @@ kubectl version
 
 ## Step 3: Install required tools
 
-We're going to use: https://github.com/redhat-nfvpe/koko
+We're going to use koko: https://github.com/redhat-nfvpe/koko
 
 "The container connector" -- since our KIND nodes are emulated, they're just docker containers, we need a way to virtually connect them, which we will do with this tool to create virtual interfaces in the host containers for KIND.
 
