@@ -30,6 +30,17 @@ I'll be using a Fedora 40 system, but, you can use anything that's capable of th
 
 * A machine with a GPU!
 
+### Vagrant based VM
+
+To deploy a VM that automatically performs the steps below as part of
+it's provisioning, consider using Vagrantfile located in this repo.
+
+```
+vagrant up && vagrant ssh
+~/start_cluster.sh
+~/run_robocni.sh -h
+```
+
 ## Step 1: Install robocniconfig
 
 Let's install: https://github.com/dougbtv/robocniconfig
