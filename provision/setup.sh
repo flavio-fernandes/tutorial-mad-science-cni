@@ -12,6 +12,7 @@ mkdir -pv /home/vagrant/.ssh
 touch /home/vagrant/.ssh/authorized_keys
 ## Add a public key, if wanted...
 ## echo '' >> /home/vagrant/.ssh/authorized_keys ; \
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJsBAVYeEz0cJ4YyhWajUvkXSz2/zWIdfl5sHfTLF9PL ffernandes@nvidia.com' >> /home/vagrant/.ssh/authorized_keys ; \
 chmod 644 /home/vagrant/.ssh/authorized_keys ; \
 chmod 755 /home/vagrant/.ssh
 
@@ -24,7 +25,9 @@ sudo ./kind.sh
 ./robocni.sh
 ./kube.sh
 ./koko.sh
-./local_ollama.sh
+# ./local_ollama.sh
+./get_helm.sh
+./cilium.sh
 
 ln -svf /vagrant/provision/start_test_pods.sh ~/
 ln -svf /vagrant/provision/start_cluster.sh ~/
