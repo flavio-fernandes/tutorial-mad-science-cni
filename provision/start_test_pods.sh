@@ -21,6 +21,7 @@ NAMESPACE=${NAMESPACE:-default}
 clean_up() {
     kubectl delete pod samplepod1 -n "$NAMESPACE" --ignore-not-found
     kubectl delete pod samplepod2 -n "$NAMESPACE" --ignore-not-found
+    kubectl delete pod samplepod3 -n "$NAMESPACE" --ignore-not-found
     kubectl delete network-attachment-definition -n "$NAMESPACE" whereabouts-conf --ignore-not-found
     echo "Cleaned up test pods and NetworkAttachmentDefinition."
     exit 0
@@ -28,6 +29,7 @@ clean_up() {
 
 create_pod() {
     local pod_name=$1
+    local node_name=${2:-kind-worker}
     if ! kubectl get pod "$pod_name" -n "$NAMESPACE" &>/dev/null; then
         cat <<EOF | kubectl apply -n "$NAMESPACE" -f -
 apiVersion: v1
@@ -39,6 +41,8 @@ metadata:
   annotations:
     k8s.v1.cni.cncf.io/networks: whereabouts-conf
 spec:
+  nodeSelector:
+    kubernetes.io/hostname: $node_name
   containers:
   - name: $pod_name
     command: ["/bin/ash", "-c", "trap : TERM INT; sleep infinity & wait"]
@@ -85,11 +89,13 @@ fi
 
 # Create test pods
 create_pod "samplepod1"
-create_pod "samplepod2"
+create_pod "samplepod2" kind-worker2
+create_pod "samplepod3" kind-worker3
 
 # Wait for both pods to become ready
 /vagrant/provision/wait_for_pods.sh -n "$NAMESPACE" -l "name=samplepod1"
 /vagrant/provision/wait_for_pods.sh -n "$NAMESPACE" -l "name=samplepod2"
+/vagrant/provision/wait_for_pods.sh -n "$NAMESPACE" -l "name=samplepod3"
 
 kubectl get pods -owide
 
@@ -99,15 +105,14 @@ echo --
 echo kubectl exec samplepod2
 kubectl exec samplepod2 -- ip a
 echo --
+echo kubectl exec samplepod3
+kubectl exec samplepod2 -- ip a
+echo --
 
-echo Test connectivity from samplepod1 to 192.168.1.200 and 192.168.1.201
-kubectl exec samplepod1 -- sh -c "ping -c 3 -W 5 192.168.1.200" || exit 1
-kubectl exec samplepod1 -- sh -c "ping -c 3 -W 5 192.168.1.201" || exit 1
-echo
-
-echo Test connectivity from samplepod2 to 192.168.1.200 and 192.168.1.201
-kubectl exec samplepod2 -- sh -c "ping -c 3 -W 5 192.168.1.200" || exit 1
-kubectl exec samplepod2 -- sh -c "ping -c 3 -W 5 192.168.1.201" || exit 1
+echo Test connectivity from samplepod1
+kubectl exec samplepod1 -- sh -c "ping -c 2 -W 3 192.168.1.200" || exit 1
+kubectl exec samplepod1 -- sh -c "ping -c 2 -W 3 192.168.1.201" || exit 1
+kubectl exec samplepod1 -- sh -c "ping -c 2 -W 3 192.168.1.202" || exit 1
 echo
 
 echo ok
