@@ -1,6 +1,6 @@
 
 cd /vagrant
-
+    
 kind create cluster --config=kind-config.yaml
 
 /vagrant/provision/config_kind.sh
