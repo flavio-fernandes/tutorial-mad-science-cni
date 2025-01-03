@@ -22,9 +22,9 @@ sudo ./pkgs.sh
 sudo ./golang.sh
 ./docker.sh
 sudo ./kind.sh
-./robocni.sh
+# ./robocni.sh
 ./kube.sh
-./koko.sh
+# ./koko.sh
 # ./local_ollama.sh
 ./get_helm.sh
 ./cilium.sh
