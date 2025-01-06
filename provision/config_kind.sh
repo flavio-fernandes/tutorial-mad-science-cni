@@ -47,5 +47,6 @@ create_docker_l2_networks
 prepare_e2e_nodes
 
 # ovn-kubernetes ic needs each node to have specific labels
-label_ovn_single_node_zones
+# ony use if ovn-ic is enabled...
+# label_ovn_single_node_zones
 

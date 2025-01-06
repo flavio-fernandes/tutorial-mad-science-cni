@@ -27,6 +27,8 @@ sudo ./kind.sh
 # ./koko.sh
 # ./local_ollama.sh
 ./get_helm.sh
+
+# grab cilium binaries, but do not start anything
 ./cilium.sh
 
 ln -svf /vagrant/provision/start_test_pods.sh ~/

@@ -1,4 +1,10 @@
 
+# creating a vm snapshot
+vagrant snapshot save freshAndClean
+
+# restoring from snapshot
+vagrant snapshot restore --no-provision freshAndClean
+        
 cd /vagrant
     
 kind create cluster --config=kind-config.yaml
@@ -6,25 +12,26 @@ kind create cluster --config=kind-config.yaml
 /vagrant/provision/config_kind.sh
 
 # https://docs.cilium.io/en/stable/installation/kind/
-helm repo add cilium https://helm.cilium.io/
-
+helm repo add cilium https://helm.cilium.io/ && \
 helm search repo cilium --versions --devel
     
-docker pull quay.io/cilium/cilium:v1.16.5
+docker pull quay.io/cilium/cilium:v1.16.5 && \
 kind load docker-image quay.io/cilium/cilium:v1.16.5
 
-cd ; helm pull cilium/cilium --version=v1.16.5 --untar
-
+cd ; helm pull cilium/cilium --version=v1.16.5 --untar && \
 helm install cilium ./cilium/ \
 --namespace kube-system \
 --set image.pullPolicy=IfNotPresent \
 --set ipam.mode=kubernetes \
 --set cni.exclusive=false    
-        
-# helm install cilium cilium/cilium --version 1.16.5 \
-# --namespace kube-system \
-# --set image.pullPolicy=IfNotPresent \
-# --set ipam.mode=kubernetes
+
+# OR
+            
+helm install cilium cilium/cilium --version 1.16.5 \
+--namespace kube-system \
+--set image.pullPolicy=IfNotPresent \
+--set ipam.mode=kubernetes \
+--set cni.exclusive=false    
 
 ## cilium status
 ## cilium hubble enable
@@ -47,7 +54,7 @@ ping -c 3 google.com
 nc -v -z -w 2 google.com 80
 
 # Multus
-kubectl create -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/refs/heads/master/deployments/multus-daemonset-thick.yml
+kubectl create -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/refs/heads/master/deployments/multus-daemonset-thick.yml    
 kubectl -n kube-system wait --for=condition=ready -l name=multus pod --timeout=300s
 
 # Reference CNI plugins

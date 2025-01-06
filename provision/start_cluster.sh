@@ -19,7 +19,8 @@ kind create cluster --config=/vagrant/kind-config.yaml
 
 /vagrant/provision/config_kind.sh
 
-/vagrant/provision/start_cluster_cni_cilium.sh
+# /vagrant/provision/start_cluster_cni_cilium.sh
+/vagrant/provision/start_cluster_cni_ovnk.sh
 
 # Wait for all nodes to be ready (10 minutes timeout)
 timeout=600
