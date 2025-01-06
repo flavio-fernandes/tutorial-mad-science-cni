@@ -19,9 +19,9 @@ NAMESPACE=$(kubectl config view --minify --output 'jsonpath={..namespace}')
 NAMESPACE=${NAMESPACE:-default}
 
 clean_up() {
-    kubectl delete pod samplepod1 -n "$NAMESPACE" --ignore-not-found
-    kubectl delete pod samplepod2 -n "$NAMESPACE" --ignore-not-found
-    kubectl delete pod samplepod3 -n "$NAMESPACE" --ignore-not-found
+    kubectl delete pod samplepod1 -n "$NAMESPACE" --ignore-not-found &
+    kubectl delete pod samplepod2 -n "$NAMESPACE" --ignore-not-found &
+    kubectl delete pod samplepod3 -n "$NAMESPACE" --ignore-not-found &
     kubectl delete network-attachment-definition -n "$NAMESPACE" whereabouts-conf --ignore-not-found
     echo "Cleaned up test pods and NetworkAttachmentDefinition."
     exit 0
@@ -39,7 +39,7 @@ metadata:
   labels:
     name: $pod_name
   annotations:
-    k8s.v1.cni.cncf.io/networks: whereabouts-conf
+    k8s.v1.cni.cncf.io/networks: whereabouts-conf@eth1
 spec:
   nodeSelector:
     kubernetes.io/hostname: $node_name

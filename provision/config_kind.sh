@@ -21,6 +21,13 @@ prepare_e2e_nodes() {
     done
 }
 
+label_ovn_single_node_zones() {
+  KIND_NODES=$(kind_get_nodes)
+  for n in $KIND_NODES; do
+    kubectl label node "${n}" k8s.ovn.org/zone-name=${n} --overwrite
+  done
+}
+
 create_docker_l2_networks() {
     docker network create --driver=bridge kind-nodes-eth1-lan ||:
     docker network create --driver=bridge kind-nodes-eth2-lan ||:
@@ -38,4 +45,7 @@ sudo sysctl fs.inotify.max_user_instances=512
 
 create_docker_l2_networks
 prepare_e2e_nodes
+
+# ovn-kubernetes ic needs each node to have specific labels
+label_ovn_single_node_zones
 

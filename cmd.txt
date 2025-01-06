@@ -5,6 +5,7 @@ kind create cluster --config=kind-config.yaml
 
 /vagrant/provision/config_kind.sh
 
+# https://docs.cilium.io/en/stable/installation/kind/
 helm repo add cilium https://helm.cilium.io/
 
 helm search repo cilium --versions --devel
